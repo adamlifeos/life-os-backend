@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 from typing import List
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from . import models, schemas, auth, ai_coach
 from .database import engine, get_db
 from .config import settings
+import logging
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -14,10 +15,8 @@ app = FastAPI(title="Life OS API")
 
 # Configure CORS
 origins = [
-    "http://localhost:3000",  # Local development
-    "https://life-os-frontend.windsurf.build",  # Deployed Netlify frontend URL
-    "https://life-os-backend-production.up.railway.app", # Backend URL
-    "https://life-os-frontend.up.railway.app",  # Railway frontend URL
+    "https://life-os-frontend.windsurf.build", 
+    "https://life-os-backend-production.up.railway.app", 
 ]
 
 app.add_middleware(
@@ -46,6 +45,22 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+# -- Temporary alias for /auth/login to help frontend CORS troubleshooting
+logger = logging.getLogger('cors_debug')
+
+@app.options('/auth/login')
+async def auth_login_options(request: Request):
+    # Debug logger: log all pertinent info for CORS preflight
+    logger.info("CORS preflight OPTIONS for /auth/login - Origin: %s, Path: %s, Method: %s, Headers: %s",
+                request.headers.get('origin'), request.url.path, request.method, dict(request.headers))
+    return Response(status_code=200)
+
+@app.post('/auth/login')
+async def auth_login_alias(request: Request):
+    # Temporary alias route that forwards to the existing /token handler
+    # Assumes the /token endpoint function is named 'login_for_access_token'.
+    return await login_for_access_token(request)
 
 # User endpoints
 @app.post("/users/", response_model=schemas.User)

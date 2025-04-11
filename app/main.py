@@ -15,6 +15,8 @@ app = FastAPI(title="Life OS API")
 # Configure CORS
 origins = [
     "http://localhost:3000",  # Local development
+    "https://life-os-frontend.windsurf.build",  # Deployed Netlify frontend URL
+    "https://life-os-backend-production.up.railway.app", # Backend URL
     "https://life-os-frontend.up.railway.app",  # Railway frontend URL
 ]
 

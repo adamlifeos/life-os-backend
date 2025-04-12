@@ -10,27 +10,38 @@ from .routers import items
 from .database import engine, get_db
 from .config import settings
 import logging
+import re
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Life OS API")
 
-# Include routers
-app.include_router(items.router)
+# Configure CORS *before* including routers
+NETLIFY_MAIN = "https://life-os.netlify.app"
+NETLIFY_PREVIEW_REGEX = r"https:\/\/[a-z0-9-]+--life-os\.netlify\.app"  # Regex for previews
+LOCAL_DEV = "http://localhost:3000"
+WINDSURF_DEV_PLACEHOLDER = "https://placeholder-username-93068.windsurf.build"
+WINDSURF_DEV_ACTUAL = "https://life-os-frontend.windsurf.build"
 
-# Configure CORS
-origins = [
-    "http://localhost:3000",
-    "https://placeholder-username-93068.windsurf.build",
+# Combine all allowed origins
+allowed_origins_list = [
+    LOCAL_DEV,
+    WINDSURF_DEV_PLACEHOLDER,
+    WINDSURF_DEV_ACTUAL,
+    NETLIFY_MAIN, 
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=allowed_origins_list,
+    allow_origin_regex=NETLIFY_PREVIEW_REGEX, 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers *after* adding middleware
+app.include_router(items.router)
 
 # Auth endpoints
 @app.post("/token", response_model=auth_schemas.Token)

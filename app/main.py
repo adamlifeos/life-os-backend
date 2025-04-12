@@ -20,8 +20,8 @@ app.include_router(items.router)
 
 # Configure CORS
 origins = [
-    "https://life-os-frontend.windsurf.build", 
-    "https://life-os-backend-production.up.railway.app", 
+    "http://localhost:3000",
+    "https://placeholder-username-93068.windsurf.build",
 ]
 
 app.add_middleware(

@@ -4,7 +4,9 @@ from fastapi import Depends, FastAPI, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from . import models, schemas, auth, ai_coach
+from . import models, auth, ai_coach
+from .schemas import auth_schemas, core_schemas, task_schemas, ai_coach_schemas
+from .routers import items
 from .database import engine, get_db
 from .config import settings
 import logging
@@ -12,6 +14,9 @@ import logging
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Life OS API")
+
+# Include routers
+app.include_router(items.router)
 
 # Configure CORS
 origins = [
@@ -28,7 +33,7 @@ app.add_middleware(
 )
 
 # Auth endpoints
-@app.post("/token", response_model=schemas.Token)
+@app.post("/token", response_model=auth_schemas.Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
@@ -63,8 +68,8 @@ async def auth_login_alias(request: Request):
     return await login_for_access_token(request)
 
 # User endpoints
-@app.post("/users/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@app.post("/users/", response_model=auth_schemas.User)
+def create_user(user: auth_schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(
         (models.User.username == user.username) | 
         (models.User.email == user.email)
@@ -82,14 +87,38 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@app.get("/users/me/", response_model=schemas.User)
+@app.get("/users/me/", response_model=auth_schemas.User)
 def read_users_me(current_user: models.User = Depends(auth.get_current_active_user)):
     return current_user
 
+# Add cascading delete for identities
+def delete_identity_cascade(db: Session, identity_id: int):
+    # Delete linked skills first
+    skills = db.query(models.Skill).filter(models.Skill.identity_id == identity_id).all()
+    for skill in skills:
+        delete_skill_cascade(db, skill.id)
+    
+    # Delete linked tasks
+    db.query(models.Task).filter(models.Task.identity_id == identity_id).delete()
+    
+    # Delete the identity
+    db.query(models.Identity).filter(models.Identity.id == identity_id).delete()
+
+# Add cascading delete for skills
+def delete_skill_cascade(db: Session, skill_id: int):
+    # Delete linked habits
+    db.query(models.Habit).filter(models.Habit.skill_id == skill_id).delete()
+    
+    # Delete linked tasks
+    db.query(models.Task).filter(models.Task.skill_id == skill_id).delete()
+    
+    # Delete the skill
+    db.query(models.Skill).filter(models.Skill.id == skill_id).delete()
+
 # Identity endpoints
-@app.post("/identities/", response_model=schemas.Identity)
+@app.post("/identities/", response_model=core_schemas.Identity)
 def create_identity(
-    identity: schemas.IdentityCreate,
+    identity: core_schemas.IdentityCreate,
     current_user: models.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -99,7 +128,7 @@ def create_identity(
     db.refresh(db_identity)
     return db_identity
 
-@app.get("/identities/", response_model=List[schemas.Identity])
+@app.get("/identities/", response_model=List[core_schemas.Identity])
 def read_identities(
     current_user: models.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
@@ -107,9 +136,9 @@ def read_identities(
     return db.query(models.Identity).filter(models.Identity.user_id == current_user.id).all()
 
 # Skill endpoints
-@app.post("/skills/", response_model=schemas.Skill)
+@app.post("/skills/", response_model=core_schemas.Skill)
 def create_skill(
-    skill: schemas.SkillCreate,
+    skill: core_schemas.SkillCreate,
     current_user: models.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -126,7 +155,7 @@ def create_skill(
     db.refresh(db_skill)
     return db_skill
 
-@app.get("/skills/", response_model=List[schemas.Skill])
+@app.get("/skills/", response_model=List[core_schemas.Skill])
 def read_skills(
     identity_id: int,
     current_user: models.User = Depends(auth.get_current_active_user),
@@ -135,9 +164,9 @@ def read_skills(
     return db.query(models.Skill).filter(models.Skill.identity_id == identity_id).all()
 
 # Habit endpoints
-@app.post("/habits/", response_model=schemas.Habit)
+@app.post("/habits/", response_model=core_schemas.Habit)
 def create_habit(
-    habit: schemas.HabitCreate,
+    habit: core_schemas.HabitCreate,
     current_user: models.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -190,9 +219,9 @@ def complete_habit(
     return {"status": "success", "streak": habit.streak}
 
 # Task endpoints
-@app.post("/tasks/", response_model=schemas.Task)
+@app.post("/tasks/", response_model=task_schemas.Task)
 def create_task(
-    task: schemas.TaskCreate,
+    task: task_schemas.TaskCreate,
     current_user: models.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -288,7 +317,7 @@ def level_up_skill(
 @app.post("/identities/{identity_id}/ai-coach")
 async def get_identity_ai_coach(
     identity_id: int,
-    request: schemas.AICoachRequest,
+    request: ai_coach_schemas.AICoachRequest,
     current_user: models.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -310,7 +339,7 @@ async def get_identity_ai_coach(
 @app.post("/skills/{skill_id}/ai-coach")
 async def get_skill_ai_coach(
     skill_id: int,
-    request: schemas.AICoachRequest,
+    request: ai_coach_schemas.AICoachRequest,
     current_user: models.User = Depends(auth.get_current_active_user),
     db: Session = Depends(get_db)
 ):

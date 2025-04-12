@@ -29,6 +29,8 @@ class Identity(Base):
     level = Column(Integer, default=1)
     exp = Column(Integer, default=0)
     ai_coach_persona = Column(String)
+    x = Column(Integer, default=0)
+    y = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="identities")
@@ -44,6 +46,8 @@ class Skill(Base):
     level = Column(Integer, default=1)
     exp = Column(Integer, default=0)
     ai_coach_persona = Column(String)
+    x = Column(Integer, default=0)
+    y = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     identity = relationship("Identity", back_populates="skills")
@@ -61,6 +65,8 @@ class Habit(Base):
     last_completed = Column(DateTime, nullable=True)
     exp_reward = Column(Integer, default=10)
     chrono_reward = Column(Integer, default=1)
+    x = Column(Integer, default=0)
+    y = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="habits")

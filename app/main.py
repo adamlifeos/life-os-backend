@@ -20,24 +20,27 @@ app = FastAPI(title="Life OS API")
 NETLIFY_MAIN = "https://life-os.netlify.app"
 NETLIFY_PREVIEW_REGEX = r"https:\/\/[a-z0-9-]+--life-os\.netlify\.app"  # Regex for previews
 LOCAL_DEV = "http://localhost:3000"
+LOCAL_DEV_ALT = "http://127.0.0.1:3000"
 WINDSURF_DEV_PLACEHOLDER = "https://placeholder-username-93068.windsurf.build"
 WINDSURF_DEV_ACTUAL = "https://life-os-frontend.windsurf.build"
 
 # Combine all allowed origins
 allowed_origins_list = [
     LOCAL_DEV,
+    LOCAL_DEV_ALT,
     WINDSURF_DEV_PLACEHOLDER,
     WINDSURF_DEV_ACTUAL,
-    NETLIFY_MAIN, 
+    NETLIFY_MAIN,
+    "https://placeholder-username-93068.windsurf.build"  # Current deployment URL
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins_list,
-    allow_origin_regex=NETLIFY_PREVIEW_REGEX, 
+    allow_origin_regex=NETLIFY_PREVIEW_REGEX,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Include routers *after* adding middleware

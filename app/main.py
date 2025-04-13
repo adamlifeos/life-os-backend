@@ -38,12 +38,25 @@ allowed_origins_list = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins_list,
+    allow_origins=["*"],  # Temporarily allow all origins for debugging
     allow_origin_regex=NETLIFY_PREVIEW_REGEX,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
 )
+
+# Add detailed logging for preflight requests
+logger = logging.getLogger('cors_debug')
+
+@app.options("{path:path}")
+async def options_handler(request: Request, path: str):
+    logger.info(f"CORS preflight OPTIONS request - Origin: {request.headers.get('origin')}, Path: {request.url.path}, Method: {request.method}, Headers: {dict(request.headers)}")
+    return Response(status_code=200, headers={
+        "Access-Control-Allow-Origin": request.headers.get('origin', '*'),
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "*"
+    })
 
 # Include routers *after* adding middleware
 app.include_router(items.router)
@@ -68,14 +81,6 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 # -- Temporary alias for /auth/login to help frontend CORS troubleshooting
-logger = logging.getLogger('cors_debug')
-
-@app.options('/auth/login')
-async def auth_login_options(request: Request):
-    # Debug logger: log all pertinent info for CORS preflight
-    logger.info("CORS preflight OPTIONS for /auth/login - Origin: %s, Path: %s, Method: %s, Headers: %s",
-                request.headers.get('origin'), request.url.path, request.method, dict(request.headers))
-    return Response(status_code=200)
 
 @app.post('/auth/login')
 async def auth_login_alias(request: Request):

@@ -22,7 +22,7 @@ NETLIFY_PREVIEW_REGEX = r"https:\/\/[a-z0-9-]+--life-os\.netlify\.app"  # Regex 
 LOCAL_DEV = "http://localhost:3000"
 LOCAL_DEV_ALT = "http://127.0.0.1:3000"
 WINDSURF_DEV_PLACEHOLDER = "https://placeholder-username-93068.windsurf.build"
-WINDSURF_DEV_ACTUAL = "https://life-os-frontend.windsurf.build"
+WINDSURF_DEV_ACTUAL = "https://life-os-frontend-windsurf.build"
 
 # Combine all allowed origins
 allowed_origins_list = [
@@ -33,7 +33,7 @@ allowed_origins_list = [
     NETLIFY_MAIN,
     "https://placeholder-username-93068.windsurf.build",  # Current deployment URL
     "https://life-os.netlify.app",  # Netlify production URL
-    "https://life-os-frontend.windsurf.build",  # Windsurf production URL
+    "https://life-os-frontend-windsurf.build",  # Windsurf production URL
 ]
 
 app.add_middleware(

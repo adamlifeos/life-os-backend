@@ -50,12 +50,14 @@ app.add_middleware(
 logger = logging.getLogger('cors_debug')
 logger.setLevel(logging.INFO)
 
-@app.options("/users/")
+# Force a handler for /users/ OPTIONS requests before anything else
+@app.options('/users/', status_code=200)
 async def options_users_handler(request: Request):
     origin = request.headers.get('origin', 'unknown')
     method = request.headers.get('access-control-request-method', 'unknown')
     headers = request.headers.get('access-control-request-headers', 'unknown')
     logger.info(f"CORS preflight OPTIONS request for /users/ - Origin: {origin}, Method: {method}, Headers: {headers}, Full Headers: {dict(request.headers)}")
+    logger.warning(f"CORS preflight debug for /users/ - This should always return 200")
     return Response(status_code=200, headers={
         "Access-Control-Allow-Origin": origin if origin != 'unknown' else '*',
         "Access-Control-Allow-Credentials": "true",

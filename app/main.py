@@ -128,6 +128,7 @@ def create_user(user: auth_schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
+# Updated GET /users/me endpoint without trailing slash to fix 405 error
 @app.get("/users/me", response_model=auth_schemas.User)
 async def read_users_me(current_user: models.User = Depends(auth.get_current_active_user)):
     return current_user

@@ -128,8 +128,8 @@ def create_user(user: auth_schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@app.get("/users/me/", response_model=auth_schemas.User)
-def read_users_me(current_user: models.User = Depends(auth.get_current_active_user)):
+@app.get("/users/me", response_model=auth_schemas.User)
+async def read_users_me(current_user: models.User = Depends(auth.get_current_active_user)):
     return current_user
 
 # Add cascading delete for identities

@@ -31,7 +31,9 @@ allowed_origins_list = [
     WINDSURF_DEV_PLACEHOLDER,
     WINDSURF_DEV_ACTUAL,
     NETLIFY_MAIN,
-    "https://placeholder-username-93068.windsurf.build"  # Current deployment URL
+    "https://placeholder-username-93068.windsurf.build",  # Current deployment URL
+    "https://life-os.netlify.app",  # Netlify production URL
+    "https://life-os-frontend.windsurf.build",  # Windsurf production URL
 ]
 
 app.add_middleware(

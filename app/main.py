@@ -39,11 +39,11 @@ allowed_origins_list = [
 # Add CORS middleware first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporarily allow all origins for debugging
+    allow_origins=allowed_origins_list,  # Use our specific list of allowed origins
     allow_origin_regex=NETLIFY_PREVIEW_REGEX,
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept"]
 )
 
 # Add detailed logging for preflight requests

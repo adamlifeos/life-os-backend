@@ -34,6 +34,7 @@ allowed_origins_list = [
     "https://placeholder-username-93068.windsurf.build",  # Current deployment URL
     "https://life-os.netlify.app",  # Netlify production URL
     "https://life-os-frontend-windsurf.build",  # Windsurf production URL
+    "https://life-os-frontend.windsurf.build",  # New Windsurf URL
 ]
 
 # Add CORS middleware first

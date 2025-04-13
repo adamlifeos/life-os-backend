@@ -16,7 +16,7 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Life OS API")
 
-# Configure CORS *before* including routers
+# Configure CORS *before* including routers or other middleware
 NETLIFY_MAIN = "https://life-os.netlify.app"
 NETLIFY_PREVIEW_REGEX = r"https:\/\/[a-z0-9-]+--life-os\.netlify\.app"  # Regex for previews
 LOCAL_DEV = "http://localhost:3000"
@@ -36,6 +36,7 @@ allowed_origins_list = [
     "https://life-os-frontend-windsurf.build",  # Windsurf production URL
 ]
 
+# Add CORS middleware first
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Temporarily allow all origins for debugging

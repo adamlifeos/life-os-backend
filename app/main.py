@@ -48,15 +48,32 @@ app.add_middleware(
 
 # Add detailed logging for preflight requests
 logger = logging.getLogger('cors_debug')
+logger.setLevel(logging.INFO)
+
+@app.options("/users/")
+async def options_users_handler(request: Request):
+    origin = request.headers.get('origin', 'unknown')
+    method = request.headers.get('access-control-request-method', 'unknown')
+    headers = request.headers.get('access-control-request-headers', 'unknown')
+    logger.info(f"CORS preflight OPTIONS request for /users/ - Origin: {origin}, Method: {method}, Headers: {headers}, Full Headers: {dict(request.headers)}")
+    return Response(status_code=200, headers={
+        "Access-Control-Allow-Origin": origin if origin != 'unknown' else '*',
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": headers if headers != 'unknown' else '*'
+    })
 
 @app.options("{path:path}")
 async def options_handler(request: Request, path: str):
-    logger.info(f"CORS preflight OPTIONS request - Origin: {request.headers.get('origin')}, Path: {request.url.path}, Method: {request.method}, Headers: {dict(request.headers)}")
+    origin = request.headers.get('origin', 'unknown')
+    method = request.headers.get('access-control-request-method', 'unknown')
+    headers = request.headers.get('access-control-request-headers', 'unknown')
+    logger.info(f"CORS preflight OPTIONS request - Path: {path}, Origin: {origin}, Method: {method}, Headers: {headers}, Full Headers: {dict(request.headers)}")
     return Response(status_code=200, headers={
-        "Access-Control-Allow-Origin": request.headers.get('origin', '*'),
+        "Access-Control-Allow-Origin": origin if origin != 'unknown' else '*',
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "*"
+        "Access-Control-Allow-Headers": headers if headers != 'unknown' else '*'
     })
 
 # Include routers *after* adding middleware
